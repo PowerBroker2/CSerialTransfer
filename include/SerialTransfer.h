@@ -110,7 +110,7 @@ namespace SerialTransfer
 
            static constexpr uint8_t CONTINUE = 3;
            static constexpr uint8_t NEW_DATA = 2;
-           static constexpr uint8_t NO_DATA = 1;
+           static constexpr uint8_t NODATA= 1;
            static constexpr uint8_t CRC_ERROR = 0;
            static constexpr uint8_t PAYLOAD_ERROR      = -1;
            static constexpr uint8_t STOP_BYTE_ERROR    = -2;
@@ -121,6 +121,8 @@ namespace SerialTransfer
            static constexpr uint8_t POSTAMBLE_SIZE  = 2;
            static constexpr uint8_t MAX_PACKET_SIZE = 254; // Maximum allowed payload bytes per packet
            static constexpr uint8_t DEFAULT_TIMEOUT = 50;
+
+           int* port;
 
             uint8_t txBuff[MAX_PACKET_SIZE];
             uint8_t rxBuff[MAX_PACKET_SIZE];
@@ -348,7 +350,7 @@ namespace SerialTransfer
                 else
                 {
                     bytesRead = 0;
-                    status    = NO_DATA;
+                    status    = NODATA;
                     return bytesRead;
                 }
 
@@ -391,6 +393,7 @@ namespace SerialTransfer
             {
                 memset(txBuff, 0, sizeof(txBuff));
                 memset(rxBuff, 0, sizeof(rxBuff));
+                tcflush(*port,TCIOFLUSH);
 
                 bytesRead   = 0;
                 status      = CONTINUE;
@@ -689,7 +692,8 @@ namespace SerialTransfer
                     close(serial_port);
                     throw std::runtime_error("Unable to set serial port tty!");  
                 }
-                std::cout << "Successfully created serial connection!" << std::endl;        
+                packet.port = &serial_port;
+                std::cout << "Successfully created serial connection!" << std::endl;      
             };
 
             ~SerialTransfer()
@@ -833,6 +837,7 @@ namespace SerialTransfer
             void reset()
             {
                 packet.reset();
+                tcflush(serial_port,TCIOFLUSH);
                 status = packet.status;
             };
 
